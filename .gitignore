@@ -79,6 +79,7 @@ temp/
 .gradle/
 local.properties
 /app/build/
+/app/schemas/
 /captures/
 .idea/
 .DS_Store

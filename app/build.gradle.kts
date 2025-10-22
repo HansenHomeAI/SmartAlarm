@@ -62,6 +62,12 @@ kotlin {
     jvmToolchain(17)
 }
 
+ksp {
+    arg("room.schemaLocation", "${'$'}projectDir/schemas")
+    arg("room.incremental", "true")
+    arg("room.expandProjection", "true")
+}
+
 dependencies {
     implementation(platform("androidx.compose:compose-bom:2024.09.01"))
     implementation("androidx.core:core-ktx:1.13.1")
