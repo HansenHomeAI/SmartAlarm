@@ -12,4 +12,18 @@
     <string name="alarm_dismiss">Dismiss</string>
     <string name="alarm_error_dismiss">Could not dismiss the alarm. Please try again.</string>
     <string name="alarm_error_snooze">Could not snooze the alarm. Please try again.</string>
+    <string name="clock_title">SmartAlarm</string>
+    <string name="clock_next_alarm">Next alarm</string>
+    <string name="clock_no_alarm">No alarm scheduled</string>
+    <string name="clock_set_alarm">Set Alarm</string>
+    <string name="clock_view_todos">View To-Dos</string>
+    <string name="clock_open_settings">Settings</string>
+    <string name="todo_title">To-Do List</string>
+    <string name="todo_new_item_label">New item</string>
+    <string name="todo_add">Add</string>
+    <string name="todo_read_all">Read All</string>
+    <string name="todo_stop">Stop</string>
+    <string name="todo_back">Back</string>
+    <string name="settings_title">Settings (coming soon)</string>
+    <string name="alarm_setup_title">Alarm setup (coming soon)</string>
 </resources>

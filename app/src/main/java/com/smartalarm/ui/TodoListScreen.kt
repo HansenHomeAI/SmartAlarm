@@ -23,6 +23,7 @@ import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.OutlinedTextFieldDefaults
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -37,6 +38,8 @@ import com.smartalarm.ui.theme.BlackBackground
 import com.smartalarm.ui.theme.RedPrimary
 import com.smartalarm.ui.theme.RedSecondary
 import com.smartalarm.ui.theme.SmartAlarmTheme
+import androidx.compose.ui.res.stringResource
+import com.smartalarm.R
 
 @Composable
 fun TodoListScreen(
@@ -46,7 +49,8 @@ fun TodoListScreen(
     onToggleCompleted: (Long, Boolean) -> Unit,
     onDeleteTodo: (TodoEntity) -> Unit,
     onReadTodos: () -> Unit,
-    onStopReading: () -> Unit
+    onStopReading: () -> Unit,
+    onBack: () -> Unit
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -56,11 +60,19 @@ fun TodoListScreen(
                 .padding(horizontal = 32.dp, vertical = 24.dp),
             verticalArrangement = Arrangement.spacedBy(24.dp)
         ) {
-            Text(
-                text = "To-Do List",
-                style = MaterialTheme.typography.displayMedium.copy(fontSize = 64.sp, color = RedPrimary),
-                modifier = Modifier.align(Alignment.CenterHorizontally)
-            )
+            androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxWidth()) {
+                TextButton(
+                    modifier = Modifier.align(Alignment.CenterStart),
+                    onClick = onBack
+                ) {
+                    Text(text = stringResource(R.string.todo_back), fontSize = 20.sp, color = RedSecondary)
+                }
+                Text(
+                    text = stringResource(R.string.todo_title),
+                    style = MaterialTheme.typography.displayMedium.copy(fontSize = 64.sp, color = RedPrimary),
+                    modifier = Modifier.align(Alignment.Center)
+                )
+            }
 
             TodoInputRow(
                 text = state.newTodoText,
@@ -109,7 +121,7 @@ private fun TodoInputRow(
             onValueChange = onTextChanged,
             modifier = Modifier.weight(1f),
             textStyle = TextStyle(color = RedPrimary, fontSize = 24.sp),
-            label = { Text("New item", color = RedSecondary) },
+            label = { Text(stringResource(R.string.todo_new_item_label), color = RedSecondary) },
             singleLine = true,
             colors = OutlinedTextFieldDefaults.colors(
                 focusedBorderColor = RedPrimary,
@@ -129,7 +141,7 @@ private fun TodoInputRow(
                 disabledContentColor = BlackBackground.copy(alpha = 0.4f)
             )
         ) {
-            Text("Add", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.todo_add), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -156,7 +168,7 @@ private fun TodoActionsRow(
                 disabledContentColor = BlackBackground.copy(alpha = 0.4f)
             )
         ) {
-            Text("Read All", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.todo_read_all), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
         Button(
             onClick = onStopReading,
@@ -168,7 +180,7 @@ private fun TodoActionsRow(
                 disabledContentColor = BlackBackground.copy(alpha = 0.4f)
             )
         ) {
-            Text("Stop", fontSize = 20.sp, fontWeight = FontWeight.Bold)
+            Text(stringResource(R.string.todo_stop), fontSize = 20.sp, fontWeight = FontWeight.Bold)
         }
     }
 }
@@ -227,7 +239,8 @@ private fun TodoListScreenPreview() {
             onToggleCompleted = { _, _ -> },
             onDeleteTodo = {},
             onReadTodos = {},
-            onStopReading = {}
+            onStopReading = {},
+            onBack = {}
         )
     }
 }
