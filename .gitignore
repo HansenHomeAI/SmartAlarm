@@ -74,3 +74,11 @@ out/
 # Temporary files
 tmp/
 temp/
+
+# Android/Gradle
+.gradle/
+local.properties
+/app/build/
+/captures/
+.idea/
+.DS_Store
