@@ -20,6 +20,7 @@ import com.smartalarm.alarm.AlarmRepository
 import com.smartalarm.alarm.AlarmScheduler
 import com.smartalarm.alarm.SnoozeManager
 import com.smartalarm.alarm.AlarmReceiver
+import com.smartalarm.MainActivity
 import com.smartalarm.ui.theme.SmartAlarmTheme
 import kotlinx.coroutines.launch
 
@@ -133,7 +134,7 @@ class AlarmTriggerActivity : ComponentActivity() {
                     processingState.value = false
                 }
                 .onSuccess {
-                    finishAndRemoveTaskSafely()
+                    navigateHome()
                 }
         }
     }
@@ -149,9 +150,22 @@ class AlarmTriggerActivity : ComponentActivity() {
                     processingState.value = false
                 }
                 .onSuccess {
-                    finishAndRemoveTaskSafely()
+                    navigateHome()
                 }
         }
+    }
+
+    private fun navigateHome() {
+        val intent = Intent(this, MainActivity::class.java).apply {
+            action = Intent.ACTION_MAIN
+            addCategory(Intent.CATEGORY_LAUNCHER)
+            addCategory(Intent.CATEGORY_DEFAULT)
+            flags = Intent.FLAG_ACTIVITY_NEW_TASK or
+                Intent.FLAG_ACTIVITY_CLEAR_TOP or
+                Intent.FLAG_ACTIVITY_SINGLE_TOP
+        }
+        startActivity(intent)
+        finishAndRemoveTaskSafely()
     }
 
     private fun finishAndRemoveTaskSafely() {
