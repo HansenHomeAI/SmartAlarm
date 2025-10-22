@@ -3,4 +3,13 @@
     <string name="app_name">SmartAlarm</string>
     <string name="hello_smart_alarm">SmartAlarm ready</string>
     <string name="next_alarm_placeholder">No alarms scheduled</string>
+    <string name="alarm_screen_title">Alarm</string>
+    <string name="alarm_label_default">Wake up</string>
+    <string name="alarm_label_snoozed">Snoozed alarm</string>
+    <string name="alarm_current_time">Current time</string>
+    <string name="alarm_scheduled_time">Scheduled for</string>
+    <string name="alarm_snooze">Snooze</string>
+    <string name="alarm_dismiss">Dismiss</string>
+    <string name="alarm_error_dismiss">Could not dismiss the alarm. Please try again.</string>
+    <string name="alarm_error_snooze">Could not snooze the alarm. Please try again.</string>
 </resources>
