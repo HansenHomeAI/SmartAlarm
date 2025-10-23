@@ -1,9 +1,12 @@
 package com.smartalarm
 
+import androidx.compose.ui.test.assertExists
 import androidx.compose.ui.test.assertIsDisplayed
 import androidx.compose.ui.test.junit4.createAndroidComposeRule
+import androidx.compose.ui.test.onNodeWithTag
 import androidx.compose.ui.test.onNodeWithText
 import androidx.compose.ui.test.performClick
+import androidx.compose.ui.test.performTextInput
 import org.junit.Rule
 import org.junit.Test
 
@@ -13,16 +16,13 @@ class NavigationSmokeTest {
     val composeTestRule = createAndroidComposeRule<MainActivity>()
 
     @Test
-    fun verifyNavigationBetweenMajorScreens() {
-        composeTestRule.onNodeWithText("SmartAlarm", substring = false).assertIsDisplayed()
+    fun verifyMainLayoutAndTodoInteraction() {
+        composeTestRule.onNodeWithText("To-Do List", substring = false).assertIsDisplayed()
+        composeTestRule.onNodeWithText("Alarm setup", substring = true).assertExists()
 
-        composeTestRule.onNodeWithText("Set Alarm", substring = false).performClick()
-        composeTestRule.onNodeWithText("Schedule Alarm", substring = false).assertIsDisplayed()
-
-        composeTestRule.activityRule.scenario.onActivity { it.onBackPressedDispatcher.onBackPressed() }
-        composeTestRule.onNodeWithText("SmartAlarm", substring = false).assertIsDisplayed()
-
-        composeTestRule.onNodeWithText("Settings", substring = false).performClick()
-        composeTestRule.onNodeWithText("Settings", substring = false).assertIsDisplayed()
+        val sampleTodo = "Test nightly task"
+        composeTestRule.onNodeWithTag("todoInput").performTextInput(sampleTodo)
+        composeTestRule.onNodeWithTag("addTodoButton").performClick()
+        composeTestRule.onNodeWithText("• $sampleTodo").assertExists()
     }
 }

@@ -1,39 +1,42 @@
 package com.smartalarm.ui
 
 import android.content.Intent
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.ui.Modifier
-import androidx.navigation.NavHostController
-import androidx.navigation.compose.NavHost
-import androidx.navigation.compose.composable
-import androidx.navigation.compose.rememberNavController
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import androidx.lifecycle.viewmodel.compose.viewModel
-import androidx.compose.runtime.remember
-
-private const val CLOCK_ROUTE = "clock"
-private const val TODO_ROUTE = "todo"
-private const val ALARM_ROUTE = "alarm"
-private const val SETTINGS_ROUTE = "settings"
+import com.smartalarm.data.TodoEntity
+import com.smartalarm.settings.PreferredTtsEngine
+import com.smartalarm.ui.theme.BlackBackground
 
 @Composable
 fun SmartAlarmApp(
     screenDimManager: ScreenDimManager,
-    burnInPreventionManager: BurnInPreventionManager,
-    navController: NavHostController = rememberNavController()
+    burnInPreventionManager: BurnInPreventionManager
 ) {
     val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
+    val todoViewModel: TodoViewModel = viewModel(factory = TodoViewModel.Factory)
+    val clockViewModel: ClockViewModel = viewModel(factory = ClockViewModel.Factory)
+    val alarmViewModel: AlarmSetupViewModel = viewModel(factory = AlarmSetupViewModel.Factory)
+
     val settingsState by settingsViewModel.uiState.collectAsStateWithLifecycle()
+    val todoState by todoViewModel.uiState.collectAsStateWithLifecycle()
+    val clockState by clockViewModel.uiState.collectAsStateWithLifecycle()
+    val alarmState by alarmViewModel.uiState.collectAsStateWithLifecycle()
     val isDimmed by screenDimManager.isDimmed.collectAsStateWithLifecycle()
     val burnInOffset by burnInPreventionManager.offset.collectAsStateWithLifecycle()
-    val handleInteraction: () -> Unit = { screenDimManager.resetTimer() }
 
-    androidx.compose.runtime.LaunchedEffect(settingsState) {
+    val context = LocalContext.current
+    val handleInteraction = { screenDimManager.resetTimer() }
+
+    LaunchedEffect(settingsState) {
         screenDimManager.updateConfiguration(
             dimDelaySeconds = settingsState.dimTimeoutSeconds,
             active = settingsState.activeBrightness,
@@ -41,36 +44,78 @@ fun SmartAlarmApp(
         )
     }
 
+    LaunchedEffect(settingsState.preferredTtsEngine) {
+        todoViewModel.updatePreferredEngine(settingsState.preferredTtsEngine)
+    }
+
     Surface(modifier = Modifier.fillMaxSize()) {
-        NavHost(navController = navController, startDestination = CLOCK_ROUTE) {
-            composable(CLOCK_ROUTE) {
-                val clockViewModel: ClockViewModel = viewModel(factory = ClockViewModel.Factory)
-                val state by clockViewModel.uiState.collectAsStateWithLifecycle()
-                val todoViewModel: TodoViewModel = viewModel(factory = TodoViewModel.Factory)
-                val todoState by todoViewModel.uiState.collectAsStateWithLifecycle()
-                val topTodos = remember(todoState.todos) {
-                    todoState.todos
-                        .sortedBy { it.sortOrder }
-                        .take(3)
-                        .map { it.text }
+        ClockScreen(
+            clockState = clockState,
+            alarmState = alarmState,
+            todoState = todoState,
+            canScheduleExactAlarms = alarmViewModel.canScheduleExactAlarms(),
+            isDimmed = isDimmed,
+            burnInOffset = burnInOffset,
+            ringing = null,
+            onAlarmTimeChanged = { hour, minute ->
+                handleInteraction()
+                alarmViewModel.updateTime(hour, minute)
+            },
+            onAlarmLabelChanged = {
+                handleInteraction()
+                alarmViewModel.updateLabel(it)
+            },
+            onSaveAlarm = {
+                handleInteraction()
+                if (alarmViewModel.canScheduleExactAlarms()) {
+                    alarmViewModel.scheduleAlarm()
                 }
-                val alarmTriggerActivityState: AlarmUiState? = null // placeholder; unify later with a shared source
-                ClockScreen(
-                    state = state,
-                    isDimmed = isDimmed,
-                    burnInOffset = burnInOffset,
-                    todoItems = topTodos,
-                    ringing = alarmTriggerActivityState,
-                    onSnooze = { /* integrate with SnoozeManager */ },
-                    onDismiss = { /* integrate with AlarmScheduler cancel */ },
-                    onDebugTriggerRing = null,
-                    onUserInteraction = handleInteraction,
-                    onNavigateToTodo = { /* TODO: implement inline todo editing */ },
-                    onNavigateToAlarm = { /* TODO: implement inline alarm setup */ },
-                    onNavigateToSettings = { /* TODO: implement inline settings */ }
-                )
-            }
-            // Removed separate routes - everything is now unified in ClockScreen
-        }
+            },
+            onCancelAlarm = {
+                handleInteraction()
+                alarmViewModel.cancelAlarm()
+            },
+            onOpenAlarmSettings = {
+                handleInteraction()
+                val intent = Intent(alarmViewModel.openExactAlarmSettingsIntent())
+                intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                context.startActivity(intent)
+            },
+            onTodoDraftChanged = {
+                handleInteraction()
+                todoViewModel.updateDraft(it)
+            },
+            onAddTodo = {
+                if (todoState.newTodoText.isNotBlank()) {
+                    handleInteraction()
+                    todoViewModel.addTodo()
+                }
+            },
+            onToggleTodo = { todo: TodoEntity, completed: Boolean ->
+                handleInteraction()
+                todoViewModel.toggleCompleted(todo.id, completed)
+            },
+            onDeleteTodo = { todo: TodoEntity ->
+                handleInteraction()
+                todoViewModel.deleteTodo(todo)
+            },
+            onReadTodos = {
+                handleInteraction()
+                todoViewModel.readTodos()
+            },
+            onStopReading = {
+                handleInteraction()
+                todoViewModel.stopReading()
+            },
+            onSnooze = {
+                handleInteraction()
+                // TODO: integrate with SnoozeManager when ringing overlay is wired up
+            },
+            onDismiss = {
+                handleInteraction()
+                // TODO: integrate with alarm dismissal when overlay is wired up
+            },
+            onUserInteraction = handleInteraction
+        )
     }
 }
