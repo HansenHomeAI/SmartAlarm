@@ -37,4 +37,6 @@
     <string name="setting_dim_timeout_title">Screen auto-dim timeout</string>
     <string name="setting_dim_timeout_option">%1$d seconds</string>
     <string name="setting_tts_engine_title">Preferred TTS engine</string>
+    <string name="setting_brightness_active_title">Active brightness level</string>
+    <string name="setting_brightness_dim_title">Dim brightness level</string>
 </resources>

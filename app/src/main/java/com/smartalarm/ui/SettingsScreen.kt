@@ -15,6 +15,8 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Slider
+import androidx.compose.material3.SliderDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
@@ -35,6 +37,8 @@ fun SettingsScreen(
     state: SettingsUiState,
     onDimTimeoutChanged: (Int) -> Unit,
     onPreferredEngineChanged: (PreferredTtsEngine) -> Unit,
+    onActiveBrightnessChanged: (Float) -> Unit,
+    onDimBrightnessChanged: (Float) -> Unit,
     onBack: () -> Unit,
     onUserInteraction: () -> Unit
 ) {
@@ -93,6 +97,26 @@ fun SettingsScreen(
                     )
                 }
             }
+
+            SettingsSection(title = stringResource(id = R.string.setting_brightness_active_title)) {
+                BrightnessSlider(
+                    value = state.activeBrightness,
+                    onValueChange = {
+                        onUserInteraction()
+                        onActiveBrightnessChanged(it)
+                    }
+                )
+            }
+
+            SettingsSection(title = stringResource(id = R.string.setting_brightness_dim_title)) {
+                BrightnessSlider(
+                    value = state.dimBrightness,
+                    onValueChange = {
+                        onUserInteraction()
+                        onDimBrightnessChanged(it)
+                    }
+                )
+            }
         }
     }
 }
@@ -125,6 +149,28 @@ private fun SettingRadioRow(selected: Boolean, label: String, onSelected: () -> 
     }
 }
 
+@Composable
+private fun BrightnessSlider(value: Float, onValueChange: (Float) -> Unit) {
+    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+        Slider(
+            value = value,
+            onValueChange = onValueChange,
+            valueRange = 0.0f..1.0f,
+            steps = 9,
+            colors = SliderDefaults.colors(
+                thumbColor = RedSecondary,
+                activeTrackColor = RedSecondary,
+                inactiveTrackColor = Color.White.copy(alpha = 0.3f)
+            )
+        )
+        Text(
+            text = String.format("%.2f", value),
+            color = Color.White,
+            style = MaterialTheme.typography.bodyMedium
+        )
+    }
+}
+
 private fun PreferredTtsEngine.toDisplayString(): String = when (this) {
     PreferredTtsEngine.Auto -> "Auto (Sherpa, fallback to Android)"
     PreferredTtsEngine.SherpaOnly -> "SherpaTTS only"
@@ -139,6 +185,8 @@ private fun SettingsPreview() {
             state = SettingsUiState(),
             onDimTimeoutChanged = {},
             onPreferredEngineChanged = {},
+            onActiveBrightnessChanged = {},
+            onDimBrightnessChanged = {},
             onBack = {},
             onUserInteraction = {}
         )

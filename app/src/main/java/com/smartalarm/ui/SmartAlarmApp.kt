@@ -127,6 +127,14 @@ fun SmartAlarmApp(
                         handleInteraction()
                         settingsViewModel.setPreferredEngine(it)
                     },
+                    onActiveBrightnessChanged = {
+                        handleInteraction()
+                        settingsViewModel.setActiveBrightness(it)
+                    },
+                    onDimBrightnessChanged = {
+                        handleInteraction()
+                        settingsViewModel.setDimBrightness(it)
+                    },
                     onBack = {
                         handleInteraction()
                         navController.popBackStack()
