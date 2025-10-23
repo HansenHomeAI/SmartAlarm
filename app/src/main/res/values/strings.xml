@@ -24,6 +24,17 @@
     <string name="todo_read_all">Read All</string>
     <string name="todo_stop">Stop</string>
     <string name="todo_back">Back</string>
-    <string name="settings_title">Settings (coming soon)</string>
+    <string name="settings_title">Settings</string>
     <string name="alarm_setup_title">Alarm setup (coming soon)</string>
+    <string name="alarm_schedule_title">Schedule Alarm</string>
+    <string name="alarm_time_label">Alarm time</string>
+    <string name="alarm_label_hint">Label (optional)</string>
+    <string name="alarm_save">Save alarm</string>
+    <string name="alarm_cancel">Cancel alarm</string>
+    <string name="alarm_permission_warning">Exact alarm permission unavailable. Grant permissions in system settings.</string>
+    <string name="alarm_permission_settings">Open settings</string>
+    <string name="alarm_upcoming_header">Upcoming Alarm</string>
+    <string name="setting_dim_timeout_title">Screen auto-dim timeout</string>
+    <string name="setting_dim_timeout_option">%1$d seconds</string>
+    <string name="setting_tts_engine_title">Preferred TTS engine</string>
 </resources>

@@ -17,6 +17,9 @@ class ScreenDimManager(private val activity: Activity) {
 
     private var started = false
     private var originalBrightness: Float = WindowManager.LayoutParams.BRIGHTNESS_OVERRIDE_NONE
+    private var dimDelayMs: Long = DEFAULT_DIM_DELAY_MS
+    private var activeBrightness: Float = DEFAULT_ACTIVE_BRIGHTNESS
+    private var dimBrightness: Float = DEFAULT_DIM_BRIGHTNESS
 
     fun start() {
         if (started) return
@@ -29,10 +32,12 @@ class ScreenDimManager(private val activity: Activity) {
         if (!started) return
         handler.removeCallbacks(dimRunnable)
         if (_isDimmed.value) {
-            setBrightness(ACTIVE_BRIGHTNESS)
+            setBrightness(activeBrightness)
             _isDimmed.value = false
+        } else {
+            setBrightness(activeBrightness)
         }
-        handler.postDelayed(dimRunnable, AUTO_DIM_DELAY_MS)
+        handler.postDelayed(dimRunnable, dimDelayMs)
     }
 
     fun stop() {
@@ -49,7 +54,7 @@ class ScreenDimManager(private val activity: Activity) {
 
     private fun applyDim() {
         if (!started) return
-        setBrightness(DIM_BRIGHTNESS)
+        setBrightness(dimBrightness)
         _isDimmed.value = true
     }
 
@@ -61,9 +66,18 @@ class ScreenDimManager(private val activity: Activity) {
         }
     }
 
+    fun updateConfiguration(dimDelaySeconds: Int, active: Float, dim: Float) {
+        dimDelayMs = dimDelaySeconds * 1000L
+        activeBrightness = active.coerceIn(0.0f, 1.0f)
+        dimBrightness = dim.coerceIn(0.0f, 1.0f)
+        if (started) {
+            resetTimer()
+        }
+    }
+
     companion object {
-        private const val AUTO_DIM_DELAY_MS = 10_000L
-        private const val DIM_BRIGHTNESS = 0.02f
-        private const val ACTIVE_BRIGHTNESS = 0.3f
+        private const val DEFAULT_DIM_DELAY_MS = 10_000L
+        private const val DEFAULT_DIM_BRIGHTNESS = 0.02f
+        private const val DEFAULT_ACTIVE_BRIGHTNESS = 0.3f
     }
 }

@@ -10,6 +10,7 @@ import androidx.lifecycle.viewmodel.viewModelFactory
 import com.smartalarm.data.TodoDatabase
 import com.smartalarm.data.TodoEntity
 import com.smartalarm.data.TodoRepository
+import com.smartalarm.settings.PreferredTtsEngine
 import com.smartalarm.tts.TtsManager
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -88,6 +89,10 @@ class TodoViewModel(
     override fun onCleared() {
         super.onCleared()
         ttsManager.close()
+    }
+
+    fun updatePreferredEngine(preference: PreferredTtsEngine) {
+        ttsManager.updatePreferredEngine(preference)
     }
 
     private fun buildSpeechFromTodos(todos: List<TodoEntity>): String {

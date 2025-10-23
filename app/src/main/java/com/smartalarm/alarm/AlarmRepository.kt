@@ -57,4 +57,15 @@ data class AlarmInfo(
     val triggerAtMillis: Long,
     val label: String?,
     val isSnoozed: Boolean
-)
+) {
+    companion object {
+        fun computeNextTriggerMillis(hour: Int, minute: Int): Long {
+            val now = java.time.ZonedDateTime.now()
+            var target = now.withHour(hour).withMinute(minute).withSecond(0).withNano(0)
+            if (target.isBefore(now) || target == now) {
+                target = target.plusDays(1)
+            }
+            return target.toInstant().toEpochMilli()
+        }
+    }
+}

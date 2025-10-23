@@ -1,26 +1,19 @@
 package com.smartalarm.ui
 
+import android.content.Intent
 import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material3.Surface
-import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
-import com.smartalarm.R
-import com.smartalarm.ui.theme.BlackBackground
 
 private const val CLOCK_ROUTE = "clock"
 private const val TODO_ROUTE = "todo"
@@ -33,9 +26,19 @@ fun SmartAlarmApp(
     burnInPreventionManager: BurnInPreventionManager,
     navController: NavHostController = rememberNavController()
 ) {
+    val settingsViewModel: SettingsViewModel = viewModel(factory = SettingsViewModel.Factory)
+    val settingsState by settingsViewModel.uiState.collectAsStateWithLifecycle()
     val isDimmed by screenDimManager.isDimmed.collectAsStateWithLifecycle()
     val burnInOffset by burnInPreventionManager.offset.collectAsStateWithLifecycle()
     val handleInteraction: () -> Unit = { screenDimManager.resetTimer() }
+
+    androidx.compose.runtime.LaunchedEffect(settingsState) {
+        screenDimManager.updateConfiguration(
+            dimDelaySeconds = settingsState.dimTimeoutSeconds,
+            active = settingsState.activeBrightness,
+            dim = settingsState.dimBrightness
+        )
+    }
 
     Surface(modifier = Modifier.fillMaxSize()) {
         NavHost(navController = navController, startDestination = CLOCK_ROUTE) {
@@ -55,6 +58,9 @@ fun SmartAlarmApp(
             composable(TODO_ROUTE) {
                 val todoViewModel: TodoViewModel = viewModel(factory = TodoViewModel.Factory)
                 val state by todoViewModel.uiState.collectAsStateWithLifecycle()
+                androidx.compose.runtime.LaunchedEffect(settingsState.preferredTtsEngine) {
+                    todoViewModel.updatePreferredEngine(settingsState.preferredTtsEngine)
+                }
                 TodoListScreen(
                     state = state,
                     onDraftChanged = todoViewModel::updateDraft,
@@ -68,18 +74,59 @@ fun SmartAlarmApp(
                 )
             }
             composable(ALARM_ROUTE) {
-                ComingSoonScreen(
-                    text = stringResource(R.string.alarm_setup_title),
+                val alarmViewModel: AlarmSetupViewModel = viewModel(factory = AlarmSetupViewModel.Factory)
+                val state by alarmViewModel.uiState.collectAsStateWithLifecycle()
+                AlarmSetupScreen(
+                    state = state,
+                    canScheduleExactAlarms = alarmViewModel.canScheduleExactAlarms(),
+                    onTimeChanged = { hour, minute ->
+                        handleInteraction()
+                        alarmViewModel.updateTime(hour, minute)
+                    },
+                    onLabelChanged = {
+                        handleInteraction()
+                        alarmViewModel.updateLabel(it)
+                    },
+                    onSave = {
+                        handleInteraction()
+                        if (alarmViewModel.canScheduleExactAlarms()) {
+                            alarmViewModel.scheduleAlarm()
+                        }
+                    },
+                    onCancelAlarm = {
+                        handleInteraction()
+                        alarmViewModel.cancelAlarm()
+                    },
                     onBack = {
                         handleInteraction()
                         navController.popBackStack()
                     },
-                    onUserInteraction = handleInteraction
+                    onOpenSettings = {
+                        handleInteraction()
+                        navController.context.startActivity(
+                            Intent(alarmViewModel.openExactAlarmSettingsIntent()).apply {
+                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
+                            }
+                        )
+                    },
+                    onUserInteraction = handleInteraction,
+                    onDismissError = {
+                        handleInteraction()
+                        alarmViewModel.consumeError()
+                    }
                 )
             }
             composable(SETTINGS_ROUTE) {
-                ComingSoonScreen(
-                    text = stringResource(R.string.settings_title),
+                SettingsScreen(
+                    state = settingsState,
+                    onDimTimeoutChanged = {
+                        handleInteraction()
+                        settingsViewModel.setDimTimeout(it)
+                    },
+                    onPreferredEngineChanged = {
+                        handleInteraction()
+                        settingsViewModel.setPreferredEngine(it)
+                    },
                     onBack = {
                         handleInteraction()
                         navController.popBackStack()
@@ -87,29 +134,6 @@ fun SmartAlarmApp(
                     onUserInteraction = handleInteraction
                 )
             }
-        }
-    }
-}
-
-@Composable
-private fun ComingSoonScreen(text: String, onBack: () -> Unit, onUserInteraction: () -> Unit) {
-    Surface(modifier = Modifier.fillMaxSize()) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .background(BlackBackground)
-                .padding(32.dp)
-        ) {
-            TextButton(
-                onClick = {
-                    onUserInteraction()
-                    onBack()
-                },
-                modifier = Modifier.align(Alignment.TopStart)
-            ) {
-                Text(text = stringResource(R.string.todo_back))
-            }
-            Text(text = text, modifier = Modifier.align(Alignment.Center))
         }
     }
 }
