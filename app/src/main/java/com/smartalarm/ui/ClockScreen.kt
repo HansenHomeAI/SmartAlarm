@@ -7,10 +7,9 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.wrapContentWidth
@@ -369,8 +368,8 @@ private fun TodoSection(
             }
         }
 
-        Row(horizontalArrangement = Arrangement.spacedBy(16.dp), verticalAlignment = Alignment.CenterVertically) {
-           OutlinedTextField(
+        Column(verticalArrangement = Arrangement.spacedBy(16.dp)) {
+            OutlinedTextField(
                 value = todoState.newTodoText,
                 onValueChange = {
                     onUserInteraction()
@@ -378,9 +377,12 @@ private fun TodoSection(
                 },
                 label = { Text(stringResource(R.string.todo_new_item_label), color = RedSecondary) },
                 modifier = Modifier
-                    .weight(1f)
+                    .fillMaxWidth()
+                    .heightIn(min = 120.dp)
                     .testTag("todoInput"),
-                textStyle = MaterialTheme.typography.bodyLarge.copy(color = RedPrimary),
+                textStyle = MaterialTheme.typography.bodyLarge.copy(color = RedPrimary, fontSize = 26.sp),
+                minLines = 3,
+                maxLines = 6,
                 colors = androidx.compose.material3.TextFieldDefaults.colors(
                     focusedContainerColor = BlackBackground,
                     unfocusedContainerColor = BlackBackground,
@@ -389,16 +391,21 @@ private fun TodoSection(
                     cursorColor = RedSecondary
                 )
             )
-           Button(
-                onClick = {
-                    onUserInteraction()
-                    onAddTodo()
-                },
-                enabled = todoState.newTodoText.isNotBlank(),
-                colors = ButtonDefaults.buttonColors(containerColor = RedSecondary, contentColor = BlackBackground),
-                modifier = Modifier.testTag("addTodoButton")
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End
             ) {
-                Text(text = stringResource(R.string.todo_add), fontWeight = FontWeight.Bold)
+                Button(
+                    onClick = {
+                        onUserInteraction()
+                        onAddTodo()
+                    },
+                    enabled = todoState.newTodoText.isNotBlank(),
+                    colors = ButtonDefaults.buttonColors(containerColor = RedSecondary, contentColor = BlackBackground),
+                    modifier = Modifier.testTag("addTodoButton")
+                ) {
+                    Text(text = stringResource(R.string.todo_add), fontWeight = FontWeight.Bold)
+                }
             }
         }
 
