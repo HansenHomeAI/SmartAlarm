@@ -2,6 +2,8 @@ package com.smartalarm.ui
 
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
+import androidx.compose.foundation.ExperimentalFoundationApi
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Column
@@ -38,6 +40,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.smartalarm.R
 import com.smartalarm.alarm.AlarmInfo
+import com.smartalarm.ui.AlarmUiState
 import com.smartalarm.ui.theme.BlackBackground
 import com.smartalarm.ui.theme.RedSecondary
 import com.smartalarm.ui.theme.RedPrimary
@@ -50,13 +53,17 @@ import java.time.ZoneId
 import java.time.format.DateTimeFormatter
 import java.util.Locale
 
-@OptIn(ExperimentalComposeUiApi::class)
+@OptIn(ExperimentalComposeUiApi::class, ExperimentalFoundationApi::class)
 @Composable
 fun ClockScreen(
     state: ClockUiState,
     isDimmed: Boolean,
     burnInOffset: IntOffset,
     todoItems: List<String>,
+    ringing: AlarmUiState?,
+    onSnooze: () -> Unit,
+    onDismiss: () -> Unit,
+    onDebugTriggerRing: (() -> Unit)? = null,
     onUserInteraction: () -> Unit,
     onNavigateToTodo: () -> Unit,
     onNavigateToAlarm: () -> Unit,
@@ -78,6 +85,9 @@ fun ClockScreen(
 
     val alarmLabel = state.nextAlarm?.let { stringResource(R.string.clock_alarm_label, nextAlarmText) }
         ?: stringResource(R.string.clock_alarm_none_label)
+
+    // Debug logging
+    android.util.Log.d("ClockScreen", "timeText: $timeText, amPmText: $amPmText, alarmLabel: $alarmLabel, todoItems: $todoItems")
 
     Surface(
         modifier = Modifier
@@ -144,6 +154,14 @@ fun ClockScreen(
                                 fontSize = 200.sp,
                                 fontWeight = FontWeight.Light,
                                 color = RedPrimary
+                            ),
+                            modifier = Modifier.then(
+                                if (onDebugTriggerRing != null) {
+                                    Modifier.combinedClickable(
+                                        onClick = {},
+                                        onLongClick = { onDebugTriggerRing() }
+                                    )
+                                } else Modifier
                             )
                         )
                         Spacer(modifier = Modifier.width(16.dp))
@@ -186,6 +204,52 @@ fun ClockScreen(
             )
         }
     }
+
+    // Ringing overlay
+    if (ringing != null) {
+        Surface(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(Color(0xAA000000))
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 32.dp, vertical = 40.dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.SpaceBetween
+            ) {
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = ringing.label ?: stringResource(com.smartalarm.R.string.alarm_label_default),
+                        style = MaterialTheme.typography.headlineMedium.copy(fontSize = 36.sp)
+                    )
+                }
+                Column(horizontalAlignment = Alignment.CenterHorizontally) {
+                    Text(
+                        text = timeText,
+                        style = MaterialTheme.typography.displayLarge
+                    )
+                    Spacer(modifier = Modifier.height(24.dp))
+                    Text(
+                        text = nextAlarmText,
+                        style = MaterialTheme.typography.bodyLarge
+                    )
+                }
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(24.dp)
+                ) {
+                    ClockActionPill(modifier = Modifier.weight(1f), text = stringResource(com.smartalarm.R.string.alarm_snooze)) {
+                        onSnooze()
+                    }
+                    ClockActionPill(modifier = Modifier.weight(1f), text = stringResource(com.smartalarm.R.string.alarm_dismiss)) {
+                        onDismiss()
+                    }
+                }
+            }
+        }
+    }
 }
 
 @Composable
@@ -203,6 +267,7 @@ private fun FocusPanel(items: List<String>, onManageTodos: () -> Unit) {
     val shape = RoundedCornerShape(48.dp)
     Column(
         modifier = Modifier
+            .width(400.dp)
             .fillMaxHeight()
             .border(width = 4.dp, color = RedSecondary, shape = shape)
             .padding(horizontal = 36.dp, vertical = 32.dp),
@@ -301,6 +366,10 @@ private fun ClockScreenPreview() {
                 "Building a revolutionary company @ 9:18pm",
                 "Preparing tomorrow's tasks"
             ),
+            ringing = null,
+            onSnooze = {},
+            onDismiss = {},
+            onDebugTriggerRing = null,
             onUserInteraction = {},
             onNavigateToTodo = {},
             onNavigateToAlarm = {},

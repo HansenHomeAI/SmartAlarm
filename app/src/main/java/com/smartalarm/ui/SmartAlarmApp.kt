@@ -54,104 +54,23 @@ fun SmartAlarmApp(
                         .take(3)
                         .map { it.text }
                 }
+                val alarmTriggerActivityState: AlarmUiState? = null // placeholder; unify later with a shared source
                 ClockScreen(
                     state = state,
                     isDimmed = isDimmed,
                     burnInOffset = burnInOffset,
                     todoItems = topTodos,
+                    ringing = alarmTriggerActivityState,
+                    onSnooze = { /* integrate with SnoozeManager */ },
+                    onDismiss = { /* integrate with AlarmScheduler cancel */ },
+                    onDebugTriggerRing = null,
                     onUserInteraction = handleInteraction,
-                    onNavigateToTodo = { navController.navigate(TODO_ROUTE) },
-                    onNavigateToAlarm = { navController.navigate(ALARM_ROUTE) },
-                    onNavigateToSettings = { navController.navigate(SETTINGS_ROUTE) }
+                    onNavigateToTodo = { /* TODO: implement inline todo editing */ },
+                    onNavigateToAlarm = { /* TODO: implement inline alarm setup */ },
+                    onNavigateToSettings = { /* TODO: implement inline settings */ }
                 )
             }
-            composable(TODO_ROUTE) {
-                val todoViewModel: TodoViewModel = viewModel(factory = TodoViewModel.Factory)
-                val state by todoViewModel.uiState.collectAsStateWithLifecycle()
-                androidx.compose.runtime.LaunchedEffect(settingsState.preferredTtsEngine) {
-                    todoViewModel.updatePreferredEngine(settingsState.preferredTtsEngine)
-                }
-                TodoListScreen(
-                    state = state,
-                    onDraftChanged = todoViewModel::updateDraft,
-                    onAddTodo = todoViewModel::addTodo,
-                    onToggleCompleted = todoViewModel::toggleCompleted,
-                    onDeleteTodo = todoViewModel::deleteTodo,
-                    onReadTodos = todoViewModel::readTodos,
-                    onStopReading = todoViewModel::stopReading,
-                    onBack = { navController.popBackStack() },
-                    onUserInteraction = handleInteraction
-                )
-            }
-            composable(ALARM_ROUTE) {
-                val alarmViewModel: AlarmSetupViewModel = viewModel(factory = AlarmSetupViewModel.Factory)
-                val state by alarmViewModel.uiState.collectAsStateWithLifecycle()
-                AlarmSetupScreen(
-                    state = state,
-                    canScheduleExactAlarms = alarmViewModel.canScheduleExactAlarms(),
-                    onTimeChanged = { hour, minute ->
-                        handleInteraction()
-                        alarmViewModel.updateTime(hour, minute)
-                    },
-                    onLabelChanged = {
-                        handleInteraction()
-                        alarmViewModel.updateLabel(it)
-                    },
-                    onSave = {
-                        handleInteraction()
-                        if (alarmViewModel.canScheduleExactAlarms()) {
-                            alarmViewModel.scheduleAlarm()
-                        }
-                    },
-                    onCancelAlarm = {
-                        handleInteraction()
-                        alarmViewModel.cancelAlarm()
-                    },
-                    onBack = {
-                        handleInteraction()
-                        navController.popBackStack()
-                    },
-                    onOpenSettings = {
-                        handleInteraction()
-                        navController.context.startActivity(
-                            Intent(alarmViewModel.openExactAlarmSettingsIntent()).apply {
-                                addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
-                        )
-                    },
-                    onUserInteraction = handleInteraction,
-                    onDismissError = {
-                        handleInteraction()
-                        alarmViewModel.consumeError()
-                    }
-                )
-            }
-            composable(SETTINGS_ROUTE) {
-                SettingsScreen(
-                    state = settingsState,
-                    onDimTimeoutChanged = {
-                        handleInteraction()
-                        settingsViewModel.setDimTimeout(it)
-                    },
-                    onPreferredEngineChanged = {
-                        handleInteraction()
-                        settingsViewModel.setPreferredEngine(it)
-                    },
-                    onActiveBrightnessChanged = {
-                        handleInteraction()
-                        settingsViewModel.setActiveBrightness(it)
-                    },
-                    onDimBrightnessChanged = {
-                        handleInteraction()
-                        settingsViewModel.setDimBrightness(it)
-                    },
-                    onBack = {
-                        handleInteraction()
-                        navController.popBackStack()
-                    },
-                    onUserInteraction = handleInteraction
-                )
-            }
+            // Removed separate routes - everything is now unified in ClockScreen
         }
     }
 }
