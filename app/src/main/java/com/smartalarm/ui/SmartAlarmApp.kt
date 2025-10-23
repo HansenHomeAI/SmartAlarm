@@ -14,6 +14,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.runtime.remember
 
 private const val CLOCK_ROUTE = "clock"
 private const val TODO_ROUTE = "todo"
@@ -45,10 +46,19 @@ fun SmartAlarmApp(
             composable(CLOCK_ROUTE) {
                 val clockViewModel: ClockViewModel = viewModel(factory = ClockViewModel.Factory)
                 val state by clockViewModel.uiState.collectAsStateWithLifecycle()
+                val todoViewModel: TodoViewModel = viewModel(factory = TodoViewModel.Factory)
+                val todoState by todoViewModel.uiState.collectAsStateWithLifecycle()
+                val topTodos = remember(todoState.todos) {
+                    todoState.todos
+                        .sortedBy { it.sortOrder }
+                        .take(3)
+                        .map { it.text }
+                }
                 ClockScreen(
                     state = state,
                     isDimmed = isDimmed,
                     burnInOffset = burnInOffset,
+                    todoItems = topTodos,
                     onUserInteraction = handleInteraction,
                     onNavigateToTodo = { navController.navigate(TODO_ROUTE) },
                     onNavigateToAlarm = { navController.navigate(ALARM_ROUTE) },
