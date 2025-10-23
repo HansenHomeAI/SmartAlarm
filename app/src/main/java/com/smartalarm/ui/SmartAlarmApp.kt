@@ -28,7 +28,15 @@ private const val ALARM_ROUTE = "alarm"
 private const val SETTINGS_ROUTE = "settings"
 
 @Composable
-fun SmartAlarmApp(navController: NavHostController = rememberNavController()) {
+fun SmartAlarmApp(
+    screenDimManager: ScreenDimManager,
+    burnInPreventionManager: BurnInPreventionManager,
+    navController: NavHostController = rememberNavController()
+) {
+    val isDimmed by screenDimManager.isDimmed.collectAsStateWithLifecycle()
+    val burnInOffset by burnInPreventionManager.offset.collectAsStateWithLifecycle()
+    val handleInteraction: () -> Unit = { screenDimManager.resetTimer() }
+
     Surface(modifier = Modifier.fillMaxSize()) {
         NavHost(navController = navController, startDestination = CLOCK_ROUTE) {
             composable(CLOCK_ROUTE) {
@@ -36,6 +44,9 @@ fun SmartAlarmApp(navController: NavHostController = rememberNavController()) {
                 val state by clockViewModel.uiState.collectAsStateWithLifecycle()
                 ClockScreen(
                     state = state,
+                    isDimmed = isDimmed,
+                    burnInOffset = burnInOffset,
+                    onUserInteraction = handleInteraction,
                     onNavigateToTodo = { navController.navigate(TODO_ROUTE) },
                     onNavigateToAlarm = { navController.navigate(ALARM_ROUTE) },
                     onNavigateToSettings = { navController.navigate(SETTINGS_ROUTE) }
@@ -52,19 +63,28 @@ fun SmartAlarmApp(navController: NavHostController = rememberNavController()) {
                     onDeleteTodo = todoViewModel::deleteTodo,
                     onReadTodos = todoViewModel::readTodos,
                     onStopReading = todoViewModel::stopReading,
-                    onBack = { navController.popBackStack() }
+                    onBack = { navController.popBackStack() },
+                    onUserInteraction = handleInteraction
                 )
             }
             composable(ALARM_ROUTE) {
                 ComingSoonScreen(
                     text = stringResource(R.string.alarm_setup_title),
-                    onBack = { navController.popBackStack() }
+                    onBack = {
+                        handleInteraction()
+                        navController.popBackStack()
+                    },
+                    onUserInteraction = handleInteraction
                 )
             }
             composable(SETTINGS_ROUTE) {
                 ComingSoonScreen(
                     text = stringResource(R.string.settings_title),
-                    onBack = { navController.popBackStack() }
+                    onBack = {
+                        handleInteraction()
+                        navController.popBackStack()
+                    },
+                    onUserInteraction = handleInteraction
                 )
             }
         }
@@ -72,7 +92,7 @@ fun SmartAlarmApp(navController: NavHostController = rememberNavController()) {
 }
 
 @Composable
-private fun ComingSoonScreen(text: String, onBack: () -> Unit) {
+private fun ComingSoonScreen(text: String, onBack: () -> Unit, onUserInteraction: () -> Unit) {
     Surface(modifier = Modifier.fillMaxSize()) {
         Box(
             modifier = Modifier
@@ -80,7 +100,13 @@ private fun ComingSoonScreen(text: String, onBack: () -> Unit) {
                 .background(BlackBackground)
                 .padding(32.dp)
         ) {
-            TextButton(onClick = onBack, modifier = Modifier.align(Alignment.TopStart)) {
+            TextButton(
+                onClick = {
+                    onUserInteraction()
+                    onBack()
+                },
+                modifier = Modifier.align(Alignment.TopStart)
+            ) {
                 Text(text = stringResource(R.string.todo_back))
             }
             Text(text = text, modifier = Modifier.align(Alignment.Center))

@@ -50,7 +50,8 @@ fun TodoListScreen(
     onDeleteTodo: (TodoEntity) -> Unit,
     onReadTodos: () -> Unit,
     onStopReading: () -> Unit,
-    onBack: () -> Unit
+    onBack: () -> Unit,
+    onUserInteraction: () -> Unit
 ) {
     Surface(modifier = Modifier.fillMaxSize()) {
         Column(
@@ -63,7 +64,10 @@ fun TodoListScreen(
             androidx.compose.foundation.layout.Box(modifier = Modifier.fillMaxWidth()) {
                 TextButton(
                     modifier = Modifier.align(Alignment.CenterStart),
-                    onClick = onBack
+                    onClick = {
+                        onUserInteraction()
+                        onBack()
+                    }
                 ) {
                     Text(text = stringResource(R.string.todo_back), fontSize = 20.sp, color = RedSecondary)
                 }
@@ -76,15 +80,27 @@ fun TodoListScreen(
 
             TodoInputRow(
                 text = state.newTodoText,
-                onTextChanged = onDraftChanged,
-                onSubmit = onAddTodo
+                onTextChanged = {
+                    onUserInteraction()
+                    onDraftChanged(it)
+                },
+                onSubmit = {
+                    onUserInteraction()
+                    onAddTodo()
+                }
             )
 
             TodoActionsRow(
                 isReading = state.isReading,
                 hasTodos = state.todos.isNotEmpty(),
-                onReadTodos = onReadTodos,
-                onStopReading = onStopReading
+                onReadTodos = {
+                    onUserInteraction()
+                    onReadTodos()
+                },
+                onStopReading = {
+                    onUserInteraction()
+                    onStopReading()
+                }
             )
 
             LazyColumn(
@@ -96,8 +112,14 @@ fun TodoListScreen(
                 items(state.todos, key = { it.id }) { todo ->
                     TodoListItem(
                         todo = todo,
-                        onToggle = { checked -> onToggleCompleted(todo.id, checked) },
-                        onDelete = { onDeleteTodo(todo) }
+                        onToggle = { checked ->
+                            onUserInteraction()
+                            onToggleCompleted(todo.id, checked)
+                        },
+                        onDelete = {
+                            onUserInteraction()
+                            onDeleteTodo(todo)
+                        }
                     )
                 }
             }
@@ -240,7 +262,8 @@ private fun TodoListScreenPreview() {
             onDeleteTodo = {},
             onReadTodos = {},
             onStopReading = {},
-            onBack = {}
+            onBack = {},
+            onUserInteraction = {}
         )
     }
 }
